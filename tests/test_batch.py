@@ -38,10 +38,10 @@ def test_allocate_reduces_qty(
     batch = make_batch(sku, 20)
     order_line = make_order_line(sku, 2)
     batch.allocate(order_line)
-    assert batch.qty == 18
+    assert batch.available_qty == 18
 
 
-def test_allocate_error_if_not_enough_qty(
+def test_cannot_allocate_if_not_enough_qty(
     sku: str, make_batch: MakeBatch, make_order_line: MakeOrderLine
 ) -> None:
     batch = make_batch(sku, 10)
@@ -50,12 +50,20 @@ def test_allocate_error_if_not_enough_qty(
         batch.allocate(order_line)
 
 
-def test_dont_allocate_line_twice(
-        sku: str,
+def test_can_allocate_equal_qty(sku: str, make_batch: MakeBatch,
+                                make_order_line: MakeOrderLine) -> None:
+    qty = 10
+    batch = make_batch(sku, qty)
+    order_line = make_order_line(sku, qty)
+    batch.allocate(order_line)
+    assert batch.available_qty == 0
+
+
+def test_cannot_allocate_if_sku_mismatch(
         make_batch: MakeBatch,
         make_order_line: MakeOrderLine) -> None:
-    batch = make_batch(sku, 10)
-    order_line = make_order_line(sku, 2)
-    batch.allocate(order_line)
-    batch.allocate(order_line)
-    assert batch.qty == 8
+    qty = 1
+    batch = make_batch("sku", qty)
+    order_line = make_order_line("another-sku", qty)
+    with pytest.raises(Exception):
+        batch.allocate(order_line)
