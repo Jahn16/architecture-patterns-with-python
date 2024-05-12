@@ -71,6 +71,15 @@ def test_cannot_allocate_if_sku_mismatch(
         batch.allocate(order_line)
 
 
+def test_deallocate(sku: str, make_batch: MakeBatch, make_order_line:
+                    MakeOrderLine) -> None:
+    batch = make_batch(sku, 10)
+    order_line = make_order_line(sku, 5)
+    batch.allocate(order_line)
+    batch.deallocate(order_line)
+    assert batch.available_qty == 10
+
+
 def test_can_only_deallocate_allocated_lines(
         sku: str,
         make_batch: MakeBatch,
