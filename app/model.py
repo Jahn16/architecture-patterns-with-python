@@ -15,14 +15,6 @@ class OrderLine:
     sku: str
     qty: int
 
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, OrderLine):
-            return False
-        return self.order_id == other.order_id
-
-    def __hash__(self) -> int:
-        return hash(self.order_id)
-
 
 class Order:
     reference = str
