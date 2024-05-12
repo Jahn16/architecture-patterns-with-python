@@ -33,9 +33,17 @@ class Batch:
     def __init__(self, reference: str, sku: str, qty: int):
         self.reference = reference
         self.sku = sku
-        self.available_qty = qty
+        self._initial_qty = qty
         self.eta = None
         self._allocations: list[OrderLine] = []
+
+    @property
+    def allocated_qty(self) -> int:
+        return sum(ol.qty for ol in self._allocations)
+
+    @property
+    def available_qty(self) -> int:
+        return self._initial_qty - self.allocated_qty
 
     def allocate(self, order_line: OrderLine) -> None:
         if self.available_qty < order_line.qty:
@@ -50,12 +58,10 @@ class Batch:
             )
         if order_line in self._allocations:
             return
-        self.available_qty -= order_line.qty
         self._allocations.append(order_line)
 
     def deallocate(self, order_line: OrderLine) -> None:
         if order_line not in self._allocations:
             raise Exception(
                 f"Order line {order_line.order_id} was not allocated")
-        self.available_qty += order_line.qty
         self._allocations.remove(order_line)
