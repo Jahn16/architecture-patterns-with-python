@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -10,8 +11,17 @@ dataclass(frozen=True)
 
 
 class OrderLine:
+    order_id: str
     sku: str
     qty: int
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, OrderLine):
+            return False
+        return self.order_id == other.order_id
+
+    def __hash__(self) -> int:
+        return hash(self.order_id)
 
 
 class Order:
@@ -25,6 +35,7 @@ class Batch:
         self.sku = sku
         self.available_qty = qty
         self.eta = None
+        self._allocations: list[OrderLine] = []
 
     def allocate(self, order_line: OrderLine) -> None:
         if self.available_qty < order_line.qty:
@@ -37,4 +48,14 @@ class Batch:
                 f"Batch SKU {self.sku} does not match "
                 f"order line SKU {order_line.sku}"
             )
+        if order_line in self._allocations:
+            return
         self.available_qty -= order_line.qty
+        self._allocations.append(order_line)
+
+    def deallocate(self, order_line: OrderLine) -> None:
+        if order_line not in self._allocations:
+            raise Exception(
+                f"Order line {order_line.order_id} was not allocated")
+        self.available_qty += order_line.qty
+        self._allocations.remove(order_line)
